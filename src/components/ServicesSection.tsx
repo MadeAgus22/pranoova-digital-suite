@@ -1,22 +1,17 @@
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import illustrationErp from "@/assets/illustration-erp.png";
-import illustrationWebsite from "@/assets/illustration-website.png";
 import illustrationIot from "@/assets/illustration-iot.png";
 
 const services = [
   {
-    title: "Digitalisasi Bisnis (ERP)",
+    title: "Digitalisasi Bisnis",
     description:
-      "Integrasikan seluruh proses bisnis Anda dalam satu sistem yang efisien. Dari inventory, keuangan, hingga HR - semua terhubung.",
+      "Transformasi digital lengkap untuk bisnis Anda. Mulai dari sistem ERP terintegrasi untuk mengelola inventory, keuangan, dan HR, hingga website profesional dengan optimasi SEO dan strategi marketing digital yang efektif.",
     image: illustrationErp,
-    features: ["Sistem Terintegrasi", "Real-time Reporting", "Otomatisasi Proses"],
-  },
-  {
-    title: "Website + SEO / Marketing",
-    description:
-      "Website profesional yang tidak hanya indah, tapi juga dioptimasi untuk mesin pencari dan menghasilkan leads berkualitas.",
-    image: illustrationWebsite,
-    features: ["Desain Responsif", "Optimasi SEO", "Marketing Digital"],
+    features: ["Sistem ERP Terintegrasi", "Website Profesional", "Optimasi SEO", "Marketing Digital"],
+    link: "/digitalisasi-bisnis",
+    hasDetailPage: true,
   },
   {
     title: "IoT, CCTV & Networking",
@@ -24,6 +19,8 @@ const services = [
       "Solusi infrastruktur IT lengkap untuk keamanan dan konektivitas bisnis Anda. Dari CCTV pintar hingga jaringan enterprise.",
     image: illustrationIot,
     features: ["Smart Surveillance", "Network Setup", "IoT Integration"],
+    link: "#contact",
+    hasDetailPage: false,
   },
 ];
 
@@ -43,14 +40,14 @@ const ServicesSection = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {services.map((service, index) => (
             <article
               key={service.title}
               className={`group bg-card rounded-2xl overflow-hidden shadow-card hover:shadow-glow transition-all duration-500 animate-fade-up`}
               style={{ animationDelay: `${index * 200}ms` }}
             >
-              <div className="aspect-square overflow-hidden bg-accent/20">
+              <div className="aspect-video overflow-hidden bg-accent/20">
                 <img
                   src={service.image}
                   alt={service.title}
@@ -61,7 +58,7 @@ const ServicesSection = () => {
                 <h3 className="text-xl font-bold mb-3 group-hover:text-primary transition-colors">
                   {service.title}
                 </h3>
-                <p className="text-muted-foreground text-sm mb-4">
+                <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
                   {service.description}
                 </p>
                 <div className="flex flex-wrap gap-2 mb-4">
@@ -74,13 +71,23 @@ const ServicesSection = () => {
                     </span>
                   ))}
                 </div>
-                <a
-                  href="#contact"
-                  className="inline-flex items-center text-sm font-semibold text-primary hover:gap-2 transition-all"
-                >
-                  Pelajari Lebih Lanjut
-                  <ArrowRight className="ml-1 w-4 h-4" />
-                </a>
+                {service.hasDetailPage ? (
+                  <Link
+                    to={service.link}
+                    className="inline-flex items-center text-sm font-semibold text-primary hover:gap-2 transition-all"
+                  >
+                    Pelajari Lebih Lanjut
+                    <ArrowRight className="ml-1 w-4 h-4" />
+                  </Link>
+                ) : (
+                  <a
+                    href={service.link}
+                    className="inline-flex items-center text-sm font-semibold text-primary hover:gap-2 transition-all"
+                  >
+                    Pelajari Lebih Lanjut
+                    <ArrowRight className="ml-1 w-4 h-4" />
+                  </a>
+                )}
               </div>
             </article>
           ))}
