@@ -4,9 +4,11 @@ import Logo from "./Logo";
 import { Button } from "./ui/button";
 
 const navLinks = [
-  { href: "#services", label: "Layanan" },
-  { href: "#about", label: "Tentang" },
-  { href: "#contact", label: "Kontak" },
+  { href: "/#", label: "Home" },
+  { href: "/#services", label: "Layanan" },
+  { href: "/#about", label: "Tentang" },
+  { href: "/#contact", label: "Kontak" },
+  { href: "/blog", label: "Blog" }
 ];
 
 const Navbar = () => {

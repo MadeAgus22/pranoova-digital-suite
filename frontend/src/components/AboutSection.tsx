@@ -1,10 +1,10 @@
 import { CheckCircle } from "lucide-react";
 
 const features = [
-  "Tim berpengalaman dengan berbagai proyek sukses",
-  "Pendekatan konsultatif yang disesuaikan kebutuhan",
-  "Dukungan teknis berkelanjutan pasca implementasi",
-  "Teknologi terkini dan best practices industri",
+  "Pendekatan berbasis kebutuhan dan skala bisnis",
+  "Solusi fleksibel untuk UMKM hingga bisnis berkembang",
+  "Dukungan teknis dan pendampingan pasca implementasi",
+  "Penggunaan teknologi yang stabil dan praktik terbaik industri",
 ];
 
 const AboutSection = () => {
@@ -17,17 +17,24 @@ const AboutSection = () => {
               Tentang Kami
             </span>
             <h2 className="text-3xl md:text-4xl font-bold mb-6">
-              Mitra Teknologi yang{" "}
-              <span className="text-gradient">Dapat Diandalkan</span>
+              Mitra Teknologi untuk{" "}
+              <span className="text-gradient">Digitalisasi Bisnis</span>
             </h2>
             <p className="text-muted-foreground mb-6 leading-relaxed">
-              Pranoova adalah perusahaan teknologi yang berfokus pada solusi digital untuk bisnis. 
-              Kami percaya bahwa setiap bisnis berhak mendapatkan teknologi yang dapat membantu 
-              mereka berkembang lebih cepat dan efisien.
+              Pranoova adalah penyedia layanan teknologi yang membantu bisnis memulai dan mengembangkan proses 
+              digitalisasi secara bertahap dan terukur. Kami berfokus pada solusi yang relevan, fungsional, 
+              dan sesuai kebutuhan operasional, bukan sekadar mengikuti tren.
             </p>
             <p className="text-muted-foreground mb-8 leading-relaxed">
-              Dengan tim yang terdiri dari para profesional berpengalaman, kami berkomitmen 
-              untuk memberikan solusi teknologi terbaik yang sesuai dengan kebutuhan unik bisnis Anda.
+              Kami memahami bahwa setiap bisnis memiliki tantangan dan kapasitas yang berbeda. Karena itu, 
+              kami mengedepankan pendekatan konsultatif—mendengarkan kebutuhan klien, memberikan rekomendasi 
+              yang masuk akal, dan mengimplementasikan solusi yang dapat digunakan secara nyata dalam operasional 
+              sehari-hari.
+            </p>
+
+            <p className="text-muted-foreground mb-6 leading-relaxed">
+              Pranoova menangani layanan implementasi ERP, pembuatan website dan optimasi SEO, serta solusi IoT, 
+              CCTV, dan jaringan internal bisnis, dengan prinsip efisiensi, transparansi, dan keberlanjutan.
             </p>
 
             <div className="space-y-4">

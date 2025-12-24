@@ -1,6 +1,11 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 
+const home = [
+
+  
+]
+
 const HeroSection = () => {
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
@@ -40,7 +45,7 @@ const HeroSection = () => {
 
           {/* Stats */}
           <div className="animate-fade-up animation-delay-600 mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            <div className="text-center">
+            {/* <div className="text-center">
               <p className="text-3xl md:text-4xl font-bold text-foreground">50+</p>
               <p className="text-sm text-muted-foreground mt-1">Klien</p>
             </div>
@@ -51,7 +56,7 @@ const HeroSection = () => {
             <div className="text-center">
               <p className="text-3xl md:text-4xl font-bold text-foreground">5+</p>
               <p className="text-sm text-muted-foreground mt-1">Tahun</p>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
