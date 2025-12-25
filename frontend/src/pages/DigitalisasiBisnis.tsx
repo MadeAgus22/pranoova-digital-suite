@@ -1,12 +1,19 @@
-import { ArrowLeft, Check, Globe, Server, TrendingUp, Shield, Users, Zap } from "lucide-react";
+import { ArrowLeft, Check, Globe, Server, TrendingUp, Shield, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
-import Navbar from "@/components/Navbar";
+// import Navbar from "@/components/Navbar"; // ⚠️ DIMATIKAN AGAR TIDAK DOUBLE (Karena sudah ada di App.tsx)
 import Footer from "@/components/Footer";
 
 const DigitalisasiBisnis = () => {
+
+  // --- FUNGSI KLIK KE WHATSAPP ---
+  const openWhatsApp = (message: string) => {
+    const phone = "6285739922214";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      {/* <Navbar /> */} 
       
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-gradient-to-br from-primary/10 via-background to-accent/20">
@@ -73,17 +80,19 @@ const DigitalisasiBisnis = () => {
             </p>
           </div>
 
-          {/* Website Package */}
+          {/* --- BAGIAN JASA WEBSITE (DENGAN GAMBAR) --- */}
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-6">
               <Globe className="w-6 h-6 text-primary" />
               <h3 className="text-2xl font-bold">Website Company Profile</h3>
             </div>
             <div className="bg-card rounded-2xl p-6 md:p-8 shadow-card">
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                
+                {/* KOLO KIRI: KONTEN TEKS */}
                 <div>
                   <h4 className="font-semibold mb-4">Ruang Lingkup</h4>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
+                  <ul className="space-y-2 text-sm text-muted-foreground mb-8">
                     <li className="flex items-start gap-2">
                       <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
                       Website Company Profile, Portofolio, Blog, E-Commerce, dan lainnya
@@ -105,19 +114,38 @@ const DigitalisasiBisnis = () => {
                       Tutorial penggunaan
                     </li>
                   </ul>
-                </div>
-                <div className="flex flex-col justify-between">
-                  <div>
-                    <h4 className="font-semibold mb-2">Estimasi Biaya</h4>
-                    <p className="text-2xl font-bold text-primary">Mulai dari Rp 900.000 / Tahun</p>
+
+                  <div className="flex flex-col sm:flex-row gap-6 items-start sm:items-center justify-between border-t border-border pt-6">
+                    <div>
+                      <h4 className="font-semibold mb-1">Estimasi Biaya</h4>
+                      <p className="text-2xl font-bold text-primary">Mulai dari Rp 900.000 / Tahun</p>
+                    </div>
+                    
+                    {/* TOMBOL WA WEBSITE */}
+                    <button 
+                      onClick={() => openWhatsApp("Halo Admin Pranoova, saya tertarik dengan *Jasa Website Company Profile*. Mohon info detailnya.")}
+                      className="inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors w-full sm:w-auto whitespace-nowrap"
+                    >
+                      Konsultasi Gratis
+                    </button>
                   </div>
-                  <a 
-                    href="/#contact" 
-                    className="mt-4 inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
-                  >
-                    Konsultasi Gratis
-                  </a>
                 </div>
+
+                 {/* KOLOM KANAN: GAMBAR ILUSTRASI */}
+                <div className="relative order-first md:order-last">
+                  <div className="aspect-video rounded-2xl overflow-hidden bg-muted relative shadow-lg">
+                    <img 
+                       src="/assets/illustration-website.png" 
+                       alt="Website Development" 
+                       className="object-cover w-full h-full"
+                       onError={(e) => {
+                          // Fallback jika gambar lokal belum ada
+                          e.currentTarget.src = "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80&w=2426";
+                       }}
+                    />
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -173,12 +201,13 @@ const DigitalisasiBisnis = () => {
                   </div>
                 </div>
                 <div className="p-6 pt-0">
-                  <a 
-                    href="/#contact" 
+                  {/* TOMBOL WA STARTER */}
+                  <button 
+                    onClick={() => openWhatsApp("Halo Admin Pranoova, saya tertarik dengan *Paket ERP Starter*. Mohon info detail modul dan layanan yang didapat.")}
                     className="w-full inline-flex items-center justify-center px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
                   >
                     Pilih Paket
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -228,12 +257,13 @@ const DigitalisasiBisnis = () => {
                   </div>
                 </div>
                 <div className="p-6 pt-0">
-                  <a 
-                    href="/#contact" 
+                  {/* TOMBOL WA GROWTH */}
+                  <button 
+                    onClick={() => openWhatsApp("Halo Admin Pranoova, saya tertarik dengan *Paket ERP Growth*, untuk bisnis saya yang sedang berkembang. Mohon info detail fiturnya.")}
                     className="w-full inline-flex items-center justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors"
                   >
                     Pilih Paket
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -280,12 +310,13 @@ const DigitalisasiBisnis = () => {
                   </div>
                 </div>
                 <div className="p-6 pt-0">
-                  <a 
-                    href="/#contact" 
+                  {/* TOMBOL WA ENTERPRISE */}
+                  <button 
+                    onClick={() => openWhatsApp("Halo Admin Pranoova, saya ingin konsultasi mengenai *Paket ERP Enterprise*, untuk kebutuhan custom perusahaan kami.")}
                     className="w-full inline-flex items-center justify-center px-6 py-3 bg-secondary text-secondary-foreground rounded-lg font-medium hover:bg-secondary/80 transition-colors"
                   >
                     Hubungi Kami
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -296,12 +327,12 @@ const DigitalisasiBisnis = () => {
             <p className="text-sm text-muted-foreground">
               Paket di atas merupakan gambaran umum layanan kami. Ruang lingkup dan biaya dapat disesuaikan berdasarkan kebutuhan operasional dan anggaran bisnis Anda.
             </p>
-            <a 
-              href="/#contact" 
-              className="inline-flex items-center text-primary font-medium mt-2 hover:underline"
+            <button 
+              onClick={() => openWhatsApp("Halo Admin Pranoova, saya ingin minta penawaran layanan yang relevan dengan kebutuhan bisnis saya.")}
+              className="inline-flex items-center text-primary font-medium mt-2 hover:underline bg-transparent border-none cursor-pointer"
             >
               Hubungi kami untuk penawaran yang paling relevan
-            </a>
+            </button>
           </div>
         </div>
       </section>

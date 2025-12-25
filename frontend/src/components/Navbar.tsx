@@ -14,6 +14,13 @@ const navLinks = [
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
 
+  // --- FUNGSI WHATSAPP DI SINI ---
+  const handleContactWA = () => {
+    const phone = "6285739922214";
+    const message = "Halo Admin Pranoova, saya ingin bertanya seputar layanan solusi digital Anda.";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
       <nav className="container flex items-center justify-between h-16 md:h-20">
@@ -32,7 +39,8 @@ const Navbar = () => {
               {link.label}
             </a>
           ))}
-          <Button variant="hero" size="default">
+          {/* Tombol Desktop dengan fungsi WA */}
+          <Button variant="hero" size="default" onClick={handleContactWA}>
             Hubungi Kami
           </Button>
         </div>
@@ -61,7 +69,8 @@ const Navbar = () => {
                 {link.label}
               </a>
             ))}
-            <Button variant="hero" size="lg" className="w-full mt-2">
+            {/* Tombol Mobile dengan fungsi WA */}
+            <Button variant="hero" size="lg" className="w-full mt-2" onClick={handleContactWA}>
               Hubungi Kami
             </Button>
           </div>
