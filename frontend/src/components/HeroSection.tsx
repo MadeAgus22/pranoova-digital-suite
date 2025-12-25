@@ -1,12 +1,23 @@
 import { ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 
-const home = [
-
-  
-]
-
 const HeroSection = () => {
+  
+  // 1. Fungsi Klik WhatsApp
+  const handleConsultation = () => {
+    const phone = "6285739922214";
+    const message = "Halo Admin Pranoova, saya ingin Konsultasi mengenai transformasi digital untuk bisnis saya.";
+    window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
+  };
+
+  // 2. Fungsi Scroll ke Layanan
+  const scrollToServices = () => {
+    const element = document.getElementById("services");
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <section className="relative min-h-screen flex items-center pt-20 overflow-hidden">
       {/* Background decoration */}
@@ -34,29 +45,16 @@ const HeroSection = () => {
           </p>
 
           <div className="animate-fade-up animation-delay-600 flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="hero" size="xl">
+            {/* Tombol Konsultasi -> WhatsApp */}
+            <Button variant="hero" size="xl" onClick={handleConsultation}>
               Konsultasi Gratis
               <ArrowRight className="ml-2" />
             </Button>
-            <Button variant="outline" size="xl">
+            
+            {/* Tombol Lihat Layanan -> Scroll ke Services */}
+            <Button variant="outline" size="xl" onClick={scrollToServices}>
               Lihat Layanan
             </Button>
-          </div>
-
-          {/* Stats */}
-          <div className="animate-fade-up animation-delay-600 mt-16 grid grid-cols-3 gap-8 max-w-lg mx-auto">
-            {/* <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground">50+</p>
-              <p className="text-sm text-muted-foreground mt-1">Klien</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground">100+</p>
-              <p className="text-sm text-muted-foreground mt-1">Proyek</p>
-            </div>
-            <div className="text-center">
-              <p className="text-3xl md:text-4xl font-bold text-foreground">5+</p>
-              <p className="text-sm text-muted-foreground mt-1">Tahun</p>
-            </div> */}
           </div>
         </div>
       </div>
