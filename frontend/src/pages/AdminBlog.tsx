@@ -32,7 +32,7 @@ const AdminBlog = () => {
 
   // FETCH DATA
   const fetchPosts = () => {
-    fetch("http://localhost:8080/api/blogs")
+    fetch("/api/blogs")
       .then(res => res.json())
       .then(data => setPosts(data));
   };
@@ -43,7 +43,7 @@ const AdminBlog = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const res = await fetch("http://localhost:8080/api/login", {
+    const res = await fetch("/api/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
     });
@@ -69,7 +69,7 @@ const AdminBlog = () => {
 
   const handleDelete = async (id: number) => {
     if (!confirm("Yakin hapus artikel ini?")) return;
-    const res = await fetch(`http://localhost:8080/api/blogs/${id}`, { method: "DELETE" });
+    const res = await fetch(`/api/blogs/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Berhasil dihapus");
       fetchPosts();
@@ -84,8 +84,8 @@ const AdminBlog = () => {
     if (file) formData.append("image", file);
 
     const url = editId 
-      ? `http://localhost:8080/api/blogs/${editId}` // URL UPDATE
-      : "http://localhost:8080/api/blogs";          // URL CREATE
+      ? `/api/blogs/${editId}` // URL UPDATE
+      : "/api/blogs";          // URL CREATE
     
     const method = editId ? "PUT" : "POST";
 

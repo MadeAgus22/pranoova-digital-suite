@@ -15,7 +15,7 @@ const BlogDetail = () => {
   const [post, setPost] = useState<BlogPost | null>(null);
 
   useEffect(() => {
-    fetch(`http://localhost:8080/api/blogs/${id}`)
+    fetch(`/api/blogs/${id}`)
       .then((res) => res.json())
       .then((data) => setPost(data))
       .catch((err) => console.error(err));
@@ -31,7 +31,7 @@ const BlogDetail = () => {
       
       {post.image && (
         <img 
-          src={`http://localhost:8080/${post.image}`} 
+          src={`/${post.image}`} 
           alt={post.title} 
           className="w-full h-[400px] object-cover rounded-xl mb-8 shadow-lg"
         />

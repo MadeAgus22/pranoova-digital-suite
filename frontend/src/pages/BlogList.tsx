@@ -15,7 +15,7 @@ const BlogList = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8080/api/blogs")
+    fetch("/api/blogs")
       .then((res) => res.json())
       .then((data) => setPosts(data))
       .catch(err => console.error("Gagal ambil data:", err));
@@ -34,7 +34,7 @@ const BlogList = () => {
               {post.image && (
                 <div className="w-full h-48 overflow-hidden rounded-t-xl bg-gray-100">
                    <img 
-                     src={`http://localhost:8080/${post.image}`} 
+                     src={`/${post.image}`} 
                      alt={post.title} 
                      className="w-full h-full object-cover"
                    />
