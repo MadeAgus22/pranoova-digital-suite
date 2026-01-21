@@ -1,42 +1,148 @@
+/* =========================================
+   1. GLOBAL STYLES
+   ========================================= */
 #root {
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
-  text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* =========================================
+   2. ADMIN EDITOR UI
+   ========================================= */
+/* Style ini hanya aktif di Admin Dashboard */
+.quill {
+  background: white;
+  border-radius: 8px;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Toolbar Sticky di Admin */
+.ql-toolbar {
+  border: none !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  position: sticky;
+  top: 0; 
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(4px);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.ql-container {
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem; 
 }
 
-.card {
-  padding: 2em;
+/* =========================================
+   3. VIEW MODE (HALAMAN BLOG DETAIL)
+   ========================================= */
+
+/* Hapus garis border kotak editor khusus di halaman detail */
+.view-mode .ql-container.ql-snow {
+    border: none !important;
 }
 
-.read-the-docs {
-  color: #888;
+/* Hapus padding bawaan editor agar teks pas di pinggir */
+.view-mode .ql-editor {
+    padding: 0 !important;
+    min-height: auto !important;
+}
+
+
+/* =========================================
+   4. PERBAIKAN FORMAT KONTEN (GLOBAL)
+   Berlaku untuk Admin & Blog Detail (karena keduanya pakai .ql-editor)
+   ========================================= */
+
+.ql-editor {
+  line-height: 1.8;
+  color: #334151; /* Slate 700 */
+  font-family: 'Inter', sans-serif !important;
+  
+  /* --- SOLUSI KATA TERPOTONG (FINAL) --- */
+  /* word-break: normal -> Jangan potong kata di tengah jalan */
+  word-break: normal !important; 
+  overflow-wrap: break-word !important; 
+  white-space: pre-wrap !important;
+  hyphens: none !important; /* Jangan kasih tanda strip (-) otomatis */
+}
+
+/* --- HEADINGS --- */
+.ql-editor h1 {
+  font-size: 2.5em !important; 
+  font-weight: 800 !important;
+  margin-top: 1.5em !important;
+  margin-bottom: 0.8em !important;
+  color: #111827;
+  line-height: 1.2;
+}
+
+.ql-editor h2 {
+  font-size: 2em !important;
+  font-weight: 700 !important;
+  margin-top: 1.5em !important;
+  margin-bottom: 0.8em !important;
+  color: #1f2937;
+}
+
+.ql-editor h3 {
+  font-size: 1.5em !important;
+  font-weight: 600 !important;
+  margin-top: 1.2em !important;
+  color: #374151;
+}
+
+/* --- LISTS (BULLET & NUMBER) --- */
+/* Wajib ada padding-left agar bullet muncul di dalam area */
+.ql-editor ul, .ql-editor ol {
+    padding-left: 2em !important; 
+    margin-bottom: 1.5em !important;
+}
+
+/* Paksa style bullet muncul (mengalahkan reset Tailwind) */
+.ql-editor ul {
+    list-style-type: disc !important;
+}
+.ql-editor ol {
+    list-style-type: decimal !important;
+}
+
+.ql-editor li {
+    display: list-item !important; /* Pastikan dianggap item list */
+    padding-left: 0.5em !important;
+    margin-bottom: 0.5em;
+}
+
+/* --- MEDIA --- */
+.ql-editor img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 1.5rem auto; 
+  display: block;      
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.ql-editor iframe {
+  width: 100% !important;
+  aspect-ratio: 16 / 9 !important;
+  height: auto !important;
+  border-radius: 12px;
+  margin: 2rem 0;
+  display: block;
+}
+
+/* --- BLOCKQUOTE --- */
+.ql-editor blockquote {
+  border-left: 4px solid #3b82f6 !important;
+  padding-left: 1rem !important;
+  font-style: italic;
+  background: #f8fafc;
+  padding: 1rem;
+  margin-bottom: 1.5em;
+}
+
+/* --- LINK --- */
+.ql-editor a {
+  color: #2563eb !important;
+  text-decoration: underline !important;
 }
