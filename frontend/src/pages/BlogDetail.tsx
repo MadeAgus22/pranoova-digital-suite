@@ -30,7 +30,7 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
     const fetchPost = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/api/blogs/${id}`);
+        const response = await fetch(`/api/blogs/${id}`);
         if (response.ok) {
           const data = await response.json();
           setPost(data);

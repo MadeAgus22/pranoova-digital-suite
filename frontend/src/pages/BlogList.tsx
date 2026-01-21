@@ -23,7 +23,7 @@ const BlogList = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await fetch("http://localhost:8080/api/blogs");
+        const response = await fetch("/api/blogs");
         if (response.ok) {
           const data = await response.json();
           // PERBAIKAN: Gunakan || []

@@ -302,7 +302,7 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	dst, _ := os.Create(filepath.Join("uploads", filename))
 	defer dst.Close()
 	io.Copy(dst, file)
-	json.NewEncoder(w).Encode(map[string]string{"url": "http://localhost:8080/uploads/" + filename})
+	json.NewEncoder(w).Encode(map[string]string{"url": "/uploads/" + filename})
 }
 
 // --- MIDDLEWARE ---
@@ -374,6 +374,6 @@ func main() {
 	originsOk := handlers.AllowedOrigins([]string{"*"})
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
-	fmt.Println("Server running at http://localhost:8080")
+	fmt.Println("Server running at server")
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
