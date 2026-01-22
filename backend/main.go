@@ -110,45 +110,52 @@ func createDefaultAdmin() {
 // --- AUTH HANDLERS ---
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var creds User
-	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
-		http.Error(w, "Invalid Request", 400)
+	// Decode JSON body
+	err := json.NewDecoder(r.Body).Decode(&creds)
+	if err != nil {
+		http.Error(w, "Invalid request body", 400)
 		return
 	}
 
-	var storedPassword, role string
-	// Ambil password & role dari DB
-	err := db.QueryRow("SELECT password, role FROM users WHERE username = ?", creds.Username).Scan(&storedPassword, &role)
+	var user User
+	// Ambil data user dari database (termasuk Role)
+	err = db.QueryRow("SELECT id, username, password, role FROM users WHERE username = ?", creds.Username).
+		Scan(&user.ID, &user.Username, &user.Password, &user.Role)
+
 	if err != nil {
 		http.Error(w, "User tidak ditemukan", 401)
 		return
 	}
 
-	// Cek Password Hash
-	if err = bcrypt.CompareHashAndPassword([]byte(storedPassword), []byte(creds.Password)); err != nil {
+	// Cek Password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
 		http.Error(w, "Password salah", 401)
 		return
 	}
 
-	// Buat Token
+	// --- BAGIAN INI YANG BERUBAH UNTUK JWT V5 ---
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
-		Username:         creds.Username,
-		Role:             role,
-		RegisteredClaims: jwt.RegisteredClaims{ExpiresAt: jwt.NewNumericDate(expirationTime)},
+		Username: user.Username,
+		Role:     user.Role,
+		RegisteredClaims: jwt.RegisteredClaims{ // Ganti StandardClaims -> RegisteredClaims
+			ExpiresAt: jwt.NewNumericDate(expirationTime), // Gunakan jwt.NewNumericDate
+		},
 	}
+	// ---------------------------------------------
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		http.Error(w, "Error Token", 500)
+		http.Error(w, "Gagal membuat token", 500)
 		return
 	}
 
-	// Kirim Response
+	// Kirim response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"token":    tokenString,
-		"username": creds.Username,
-		"role":     role,
+		"token": tokenString,
+		"role":  user.Role,
 	})
 }
 
@@ -312,14 +319,20 @@ func authMiddleware(next http.Handler) http.Handler {
 		if len(tokenString) > 7 && strings.ToUpper(tokenString[0:6]) == "BEARER" {
 			tokenString = tokenString[7:]
 		}
+
 		claims := &Claims{}
+
+		// Parse Token dengan Claims v5
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
+
 		if err != nil || !token.Valid {
 			http.Error(w, "Unauthorized", 401)
 			return
 		}
+
+		// Lanjut ke handler berikutnya
 		next.ServeHTTP(w, r)
 	})
 }
