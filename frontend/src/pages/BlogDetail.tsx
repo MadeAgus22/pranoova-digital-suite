@@ -6,12 +6,14 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import "../App.css"; 
 
-// Import React Quill agar tampilan 100% sama dengan Admin
+// Import React Quill
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css'; 
 
+// --- UPDATE INTERFACE DI SINI ---
 interface BlogPost {
   id: number;
+  slug: string; // Tambahkan slug agar sesuai data backend
   title: string;
   author: string;
   date: string;
@@ -22,7 +24,9 @@ interface BlogPost {
 }
 
 const BlogDetail = () => {
-  const { id } = useParams();
+  // "id" di sini sekarang akan berisi SLUG (contoh: "cara-belajar-coding")
+  // karena kita belum mengubah settingan router di App.tsx (masih :id)
+  const { id } = useParams(); 
   const navigate = useNavigate();
   const [post, setPost] = useState<BlogPost | null>(null);
 
@@ -30,6 +34,7 @@ const BlogDetail = () => {
     window.scrollTo(0, 0);
     const fetchPost = async () => {
       try {
+        // Backend Go sudah dimodifikasi untuk menerima SLUG di endpoint ini
         const response = await fetch(`/api/blogs/${id}`);
         if (response.ok) {
           const data = await response.json();
@@ -62,7 +67,6 @@ const BlogDetail = () => {
     return <div className="text-center py-20">Loading...</div>;
   }
 
-  // Config agar toolbar TIDAK MUNCUL di mode baca
   const modules = {
     toolbar: false 
   };
@@ -108,9 +112,6 @@ const BlogDetail = () => {
             </h1>
 
             <div className="border-t pt-8">
-                {/* SOLUSI FINAL: Gunakan ReactQuill mode readOnly.
-                    Class 'view-mode' akan kita pakai di CSS untuk hilangkan border kotak. 
-                */}
                 <ReactQuill
                     value={post.content}
                     readOnly={true}
@@ -128,5 +129,5 @@ const BlogDetail = () => {
     </div>
   );
 };
-
+ 
 export default BlogDetail;
