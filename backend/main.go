@@ -9,19 +9,21 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp" // PENTING: Untuk membersihkan slug
 	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/joho/godotenv" // Library untuk baca .env
+	"github.com/joho/godotenv"
 	"golang.org/x/crypto/bcrypt"
 	_ "modernc.org/sqlite"
 )
 
-// Variabel Global untuk Kunci Rahasia (Diisi nanti di main)
+// Variabel Global
 var jwtKey []byte
+var db *sql.DB
 
 // --- STRUCTS ---
 type Claims struct {
@@ -33,6 +35,7 @@ type Claims struct {
 type Blog struct {
 	ID           int    `json:"id"`
 	Title        string `json:"title"`
+	Slug         string `json:"slug"` // TAMBAHAN: Slug untuk URL SEO
 	Author       string `json:"author"`
 	Date         string `json:"date"`
 	Content      string `json:"content"`
@@ -49,34 +52,70 @@ type User struct {
 	Role     string `json:"role"`
 }
 
-var db *sql.DB
+// --- HELPER FUNCTION: Make Slug ---
+func makeSlug(title string) string {
+	// Ubah ke huruf kecil
+	slug := strings.ToLower(title)
+	// Ganti spasi dengan strip
+	slug = strings.ReplaceAll(slug, " ", "-")
+	// Hapus karakter selain huruf, angka, dan strip
+	reg, _ := regexp.Compile("[^a-z0-9-]+")
+	slug = reg.ReplaceAllString(slug, "")
+	return slug
+}
 
 // --- DATABASE INIT ---
 func initDB() {
 	var err error
-	// Menggunakan database pranoova2.db agar bersih
+	// Menggunakan database pranoova2.db
 	db, err = sql.Open("sqlite", "./pranoova2.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Tabel Blogs
+	// 1. Tabel Blogs (Update: tambah kolom slug jika belum ada)
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS blogs (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT, author TEXT, date TEXT, content TEXT, 
-		image_url TEXT, meta_title TEXT, meta_desc TEXT, meta_keywords TEXT
-	);`)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT, 
+        slug TEXT UNIQUE, 
+        author TEXT, date TEXT, content TEXT, 
+        image_url TEXT, meta_title TEXT, meta_desc TEXT, meta_keywords TEXT
+    );`)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Tabel Users
+	// --- AUTO MIGRATION: Fix Database Lama ---
+	// Coba tambahkan kolom slug (jika error berarti sudah ada, abaikan)
+	db.Exec("ALTER TABLE blogs ADD COLUMN slug TEXT")
+
+	// Isi slug untuk artikel lama yang masih kosong
+	rows, _ := db.Query("SELECT id, title FROM blogs WHERE slug IS NULL OR slug = ''")
+	if rows != nil {
+		updates := make(map[int]string)
+		var id int
+		var title string
+		for rows.Next() {
+			rows.Scan(&id, &title)
+			updates[id] = makeSlug(title)
+		}
+		rows.Close()
+
+		for id, slug := range updates {
+			// Tambahkan unique timestamp jika slug duplikat (opsional tapi aman)
+			db.Exec("UPDATE blogs SET slug = ? WHERE id = ?", slug, id)
+			fmt.Printf("Migrasi: Blog ID %d updated ke slug '%s'\n", id, slug)
+		}
+	}
+	// --- END MIGRATION ---
+
+	// 2. Tabel Users
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		username TEXT UNIQUE,
-		password TEXT,
-		role TEXT DEFAULT 'user'
-	);`)
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT DEFAULT 'user'
+    );`)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,7 +127,6 @@ func createDefaultAdmin() {
 	var count int
 	db.QueryRow("SELECT count(*) FROM users").Scan(&count)
 
-	// Jika belum ada user sama sekali
 	if count == 0 {
 		hash, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
 		_, err := db.Exec("INSERT INTO users(username, password, role) VALUES(?, ?, ?)", "admin", string(hash), "admin")
@@ -98,28 +136,21 @@ func createDefaultAdmin() {
 			log.Println("User default dibuat: admin / password123 (Role: admin)")
 		}
 	} else {
-		// PERBAIKAN: Jika user admin sudah ada tapi role-nya error/kosong, kita paksa update
-		_, err := db.Exec("UPDATE users SET role='admin' WHERE username='admin' AND (role IS NULL OR role = '')")
-		if err == nil {
-			// Pesan ini hanya muncul jika query berhasil jalan (tidak error syntax)
-			// log.Println("Cek integritas role admin selesai.")
-		}
+		// Pastikan admin punya role yang benar
+		db.Exec("UPDATE users SET role='admin' WHERE username='admin' AND (role IS NULL OR role = '')")
 	}
 }
 
 // --- AUTH HANDLERS ---
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	var creds User
-	// Decode JSON body
-	err := json.NewDecoder(r.Body).Decode(&creds)
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&creds); err != nil {
 		http.Error(w, "Invalid request body", 400)
 		return
 	}
 
 	var user User
-	// Ambil data user dari database (termasuk Role)
-	err = db.QueryRow("SELECT id, username, password, role FROM users WHERE username = ?", creds.Username).
+	err := db.QueryRow("SELECT id, username, password, role FROM users WHERE username = ?", creds.Username).
 		Scan(&user.ID, &user.Username, &user.Password, &user.Role)
 
 	if err != nil {
@@ -127,22 +158,20 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Cek Password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(creds.Password)); err != nil {
 		http.Error(w, "Password salah", 401)
 		return
 	}
 
-	// --- BAGIAN INI YANG BERUBAH UNTUK JWT V5 ---
+	// JWT V5 Claims
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		Username: user.Username,
 		Role:     user.Role,
-		RegisteredClaims: jwt.RegisteredClaims{ // Ganti StandardClaims -> RegisteredClaims
-			ExpiresAt: jwt.NewNumericDate(expirationTime), // Gunakan jwt.NewNumericDate
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
-	// ---------------------------------------------
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
@@ -151,7 +180,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Kirim response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"token": tokenString,
@@ -222,12 +250,14 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 
 // --- BLOG HANDLERS ---
 func getBlogs(w http.ResponseWriter, r *http.Request) {
-	rows, _ := db.Query("SELECT id, title, author, date, content, image_url, COALESCE(meta_title, ''), COALESCE(meta_desc, ''), COALESCE(meta_keywords, '') FROM blogs ORDER BY id DESC")
+	// Ambil slug juga
+	rows, _ := db.Query("SELECT id, title, slug, author, date, content, image_url, COALESCE(meta_title, ''), COALESCE(meta_desc, ''), COALESCE(meta_keywords, '') FROM blogs ORDER BY id DESC")
 	defer rows.Close()
 	var blogs []Blog
 	for rows.Next() {
 		var b Blog
-		rows.Scan(&b.ID, &b.Title, &b.Author, &b.Date, &b.Content, &b.ImageURL, &b.MetaTitle, &b.MetaDesc, &b.MetaKeywords)
+		// Scan slug
+		rows.Scan(&b.ID, &b.Title, &b.Slug, &b.Author, &b.Date, &b.Content, &b.ImageURL, &b.MetaTitle, &b.MetaDesc, &b.MetaKeywords)
 		blogs = append(blogs, b)
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -237,17 +267,29 @@ func getBlogs(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(blogs)
 	}
 }
+
 func getBlog(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	slug := vars["id"] // URL parameter adalah {id}, tapi kita anggap sebagai slug/id
+
 	var b Blog
-	err := db.QueryRow("SELECT id, title, author, date, content, image_url, COALESCE(meta_title, ''), COALESCE(meta_desc, ''), COALESCE(meta_keywords, '') FROM blogs WHERE id = ?", vars["id"]).
-		Scan(&b.ID, &b.Title, &b.Author, &b.Date, &b.Content, &b.ImageURL, &b.MetaTitle, &b.MetaDesc, &b.MetaKeywords)
+	// Cari berdasarkan SLUG
+	err := db.QueryRow("SELECT id, title, slug, author, date, content, image_url, COALESCE(meta_title, ''), COALESCE(meta_desc, ''), COALESCE(meta_keywords, '') FROM blogs WHERE slug = ?", slug).
+		Scan(&b.ID, &b.Title, &b.Slug, &b.Author, &b.Date, &b.Content, &b.ImageURL, &b.MetaTitle, &b.MetaDesc, &b.MetaKeywords)
+
 	if err != nil {
-		http.Error(w, "Not Found", 404)
-		return
+		// Fallback: Jika gagal cari slug, coba cari by ID (jaga-jaga)
+		err = db.QueryRow("SELECT id, title, slug, author, date, content, image_url, COALESCE(meta_title, ''), COALESCE(meta_desc, ''), COALESCE(meta_keywords, '') FROM blogs WHERE id = ?", slug).
+			Scan(&b.ID, &b.Title, &b.Slug, &b.Author, &b.Date, &b.Content, &b.ImageURL, &b.MetaTitle, &b.MetaDesc, &b.MetaKeywords)
+
+		if err != nil {
+			http.Error(w, "Blog Not Found", 404)
+			return
+		}
 	}
 	json.NewEncoder(w).Encode(b)
 }
+
 func createBlog(w http.ResponseWriter, r *http.Request) {
 	var b Blog
 	if err := json.NewDecoder(r.Body).Decode(&b); err != nil {
@@ -256,14 +298,16 @@ func createBlog(w http.ResponseWriter, r *http.Request) {
 	}
 
 	b.Date = time.Now().Format("2006-01-02")
+	// Generate Slug
+	b.Slug = makeSlug(b.Title)
 
-	// PERBAIKAN: Tangkap error dengan variabel 'err', JANGAN PAKAI '_'
-	res, err := db.Exec("INSERT INTO blogs(title, author, date, content, image_url, meta_title, meta_desc, meta_keywords) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", b.Title, b.Author, b.Date, b.Content, b.ImageURL, b.MetaTitle, b.MetaDesc, b.MetaKeywords)
+	// Insert dengan Slug
+	res, err := db.Exec("INSERT INTO blogs(title, slug, author, date, content, image_url, meta_title, meta_desc, meta_keywords) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+		b.Title, b.Slug, b.Author, b.Date, b.Content, b.ImageURL, b.MetaTitle, b.MetaDesc, b.MetaKeywords)
 
 	if err != nil {
-		// INI PENTING: Tampilkan error di terminal dan kirim ke frontend
 		log.Println("ERROR DATABASE:", err)
-		http.Error(w, "Gagal simpan ke database: "+err.Error(), 500)
+		http.Error(w, "Gagal simpan (Mungkin judul/slug duplikat): "+err.Error(), 500)
 		return
 	}
 
@@ -280,12 +324,15 @@ func updateBlog(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// PERBAIKAN: Tangkap error
-	_, err := db.Exec("UPDATE blogs SET title=?, author=?, content=?, image_url=?, meta_title=?, meta_desc=?, meta_keywords=? WHERE id=?", b.Title, b.Author, b.Content, b.ImageURL, b.MetaTitle, b.MetaDesc, b.MetaKeywords, vars["id"])
+	// Update Slug juga jika judul berubah
+	b.Slug = makeSlug(b.Title)
+
+	_, err := db.Exec("UPDATE blogs SET title=?, slug=?, author=?, content=?, image_url=?, meta_title=?, meta_desc=?, meta_keywords=? WHERE id=?",
+		b.Title, b.Slug, b.Author, b.Content, b.ImageURL, b.MetaTitle, b.MetaDesc, b.MetaKeywords, vars["id"])
 
 	if err != nil {
 		log.Println("ERROR UPDATE:", err)
-		http.Error(w, "Gagal update database: "+err.Error(), 500)
+		http.Error(w, "Gagal update: "+err.Error(), 500)
 		return
 	}
 
@@ -296,19 +343,32 @@ func deleteBlog(w http.ResponseWriter, r *http.Request) {
 	db.Exec("DELETE FROM blogs WHERE id=?", mux.Vars(r)["id"])
 	json.NewEncoder(w).Encode(map[string]string{"message": "Deleted"})
 }
+
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
-	r.ParseMultipartForm(10 << 20)
+	r.ParseMultipartForm(10 << 20) // Max 10MB
 	file, handler, err := r.FormFile("file")
 	if err != nil {
-		http.Error(w, "Error", 400)
+		http.Error(w, "Error retrieving file", 400)
 		return
 	}
 	defer file.Close()
+
+	// Pastikan folder uploads ada
+	os.MkdirAll("uploads", 0755)
+
 	filename := fmt.Sprintf("%d_%s", time.Now().Unix(), handler.Filename)
-	os.Mkdir("uploads", 0755)
-	dst, _ := os.Create(filepath.Join("uploads", filename))
+	dstPath := filepath.Join("uploads", filename)
+
+	dst, err := os.Create(dstPath)
+	if err != nil {
+		http.Error(w, "Error saving file", 500)
+		return
+	}
 	defer dst.Close()
+
 	io.Copy(dst, file)
+
+	// Return URL RELATIF (Tanpa localhost, agar aman di server)
 	json.NewEncoder(w).Encode(map[string]string{"url": "/uploads/" + filename})
 }
 
@@ -321,8 +381,6 @@ func authMiddleware(next http.Handler) http.Handler {
 		}
 
 		claims := &Claims{}
-
-		// Parse Token dengan Claims v5
 		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return jwtKey, nil
 		})
@@ -332,24 +390,21 @@ func authMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
-		// Lanjut ke handler berikutnya
 		next.ServeHTTP(w, r)
 	})
 }
 
 // --- MAIN FUNCTION ---
 func main() {
-	// 1. Load .env
+	// Load .env
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Peringatan: File .env tidak ditemukan, menggunakan environment sistem.")
+		log.Println("Note: .env tidak ditemukan, menggunakan environment sistem.")
 	}
 
-	// 2. Ambil Secret Key
 	secret := os.Getenv("JWT_SECRET")
 	if secret == "" {
-		// Fallback jika lupa bikin .env (biar ga crash saat belajar)
-		log.Println("PERINGATAN: JWT_SECRET tidak ada di .env, menggunakan default tidak aman.")
+		log.Println("PERINGATAN: JWT_SECRET default digunakan.")
 		jwtKey = []byte("default_rahasia_jgn_dipakai_prod")
 	} else {
 		jwtKey = []byte(secret)
@@ -357,19 +412,22 @@ func main() {
 
 	initDB()
 	defer db.Close()
+
+	// Pastikan folder upload ada
 	if _, err := os.Stat("uploads"); os.IsNotExist(err) {
 		os.Mkdir("uploads", 0755)
 	}
 
 	r := mux.NewRouter()
 
-	// PUBLIC ROUTES
+	// --- ROUTES ---
+	// Public
 	r.HandleFunc("/api/login", loginHandler).Methods("POST")
 	r.HandleFunc("/api/blogs", getBlogs).Methods("GET")
-	r.HandleFunc("/api/blogs/{id}", getBlog).Methods("GET") // Tambahkan get single blog (public)
+	r.HandleFunc("/api/blogs/{id}", getBlog).Methods("GET") // ID di sini bisa berupa SLUG
 	r.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 
-	// PROTECTED ROUTES
+	// Protected (Butuh Login)
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(authMiddleware)
 
@@ -383,10 +441,11 @@ func main() {
 	api.HandleFunc("/users/{id}", updateUser).Methods("PUT")
 	api.HandleFunc("/users/{id}", deleteUser).Methods("DELETE")
 
+	// CORS
 	headersOk := handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"})
-	originsOk := handlers.AllowedOrigins([]string{"*"})
+	originsOk := handlers.AllowedOrigins([]string{"*"}) // Boleh diubah ke domain spesifik untuk keamanan
 	methodsOk := handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"})
 
-	fmt.Println("Server running at server")
+	fmt.Println("Server running at port 8080")
 	log.Fatal(http.ListenAndServe(":8080", handlers.CORS(originsOk, headersOk, methodsOk)(r)))
 }
