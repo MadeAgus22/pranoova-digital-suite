@@ -8,6 +8,7 @@ import { Calendar, User, ArrowRight } from "lucide-react";
 
 interface BlogPost {
   id: number;
+  slug: string;
   title: string;
   author: string;
   date: string;
@@ -95,7 +96,7 @@ const BlogList = () => {
                     </span>
                   </div>
                   <CardTitle className="text-xl line-clamp-2 hover:text-blue-600 transition-colors">
-                    <Link to={`/blog/${post.id}`}>{post.title}</Link>
+                    <Link to={`/blog/${post.slug}`}>{post.title}</Link>
                   </CardTitle>
                 </CardHeader>
                 
@@ -107,7 +108,7 @@ const BlogList = () => {
                 
                 <CardFooter className="pt-0">
                   <Button asChild variant="link" className="px-0 text-blue-600 font-semibold group">
-                    <Link to={`/blog/${post.id}`}>
+                    <Link to={`/blog/${post.slug}`}>
                       Baca Selengkapnya 
                       <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
