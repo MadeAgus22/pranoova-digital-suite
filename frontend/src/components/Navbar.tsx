@@ -16,7 +16,7 @@ const Navbar = () => {
 
   // --- FUNGSI WHATSAPP DI SINI ---
   const handleContactWA = () => {
-    const phone = "6285739922214";
+    const phone = "6285142713234";
     const message = "Halo Admin Pranoova, saya ingin bertanya seputar layanan solusi digital Anda.";
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };

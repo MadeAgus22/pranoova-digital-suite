@@ -7,7 +7,7 @@ const DigitalisasiBisnis = () => {
 
   // --- FUNGSI KLIK KE WHATSAPP ---
   const openWhatsApp = (message: string) => {
-    const phone = "6285739922214";
+    const phone = "6285142713234";
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
 

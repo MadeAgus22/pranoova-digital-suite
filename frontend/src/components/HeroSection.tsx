@@ -5,7 +5,7 @@ const HeroSection = () => {
   
   // 1. Fungsi Klik WhatsApp
   const handleConsultation = () => {
-    const phone = "6285739922214";
+    const phone = "6285142713234";
     const message = "Halo Admin Pranoova, saya ingin Konsultasi mengenai transformasi digital untuk bisnis saya.";
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, "_blank");
   };
